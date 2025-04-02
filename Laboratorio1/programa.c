@@ -131,7 +131,7 @@ int contar_permutaciones_graciles(int n) {
     bool *diferencias = malloc(n * sizeof(bool));  // Arreglo para marcar las diferencias utilizadas
 
     // Inicialización de los arreglos
-    /*a memoria asignada dinámicamente con malloc no se inicializa automáticamente, lo que significa que 
+    /*La memoria asignada dinámicamente con malloc no se inicializa automáticamente, lo que significa que 
     los arreglos podrían contener valores basura aleatorios.*/
     for (int i = 0; i <= n; i++) usado[i] = false; //Asegura que todos los números están disponibles al inicio.
     for (int i = 0; i < n; i++) diferencias[i] = false; //Indica que ninguna diferencia entre elementos ha sido usada en la permutación.
