@@ -26,7 +26,7 @@ void countPulse() {
 
 void setup() {
   Serial.begin(115200);
-
+  delay(3000);
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
   pinMode(ENA, OUTPUT);
@@ -42,38 +42,46 @@ void setup() {
 
 void loop() {
   if (Serial.available()) {
-    String input = Serial.readStringUntil('\n');
-    input.trim();
+  String input = Serial.readStringUntil('\n');
+  input.trim();
 
-    if (dutyCycle == -1) {
-      int val = input.toInt();
-      if (val >= 0 && val <= 100) {
-        dutyCycle = val;
-        analogWrite(ENA, map(dutyCycle, 0, 100, 0, 255));
-        Serial.println("Duty recibido.");
-        Serial.println("¿Dirección? 'f' (adelante) o 'r' (reversa):");
-      } else {
-        Serial.println("Duty inválido. Intente de nuevo (0–100):");
-      }
-    } else if (!directionSet) {
-      if (input == "f") {
-        digitalWrite(IN1, HIGH);
-        digitalWrite(IN2, LOW);
-        directionSet = true;
-        Serial.println("Dirección: adelante.");
-        ready = true;
-      } else if (input == "r") {
-        digitalWrite(IN1, LOW);
-        digitalWrite(IN2, HIGH);
-        directionSet = true;
-        Serial.println("Dirección: reversa.");
-        ready = true;
-      } else {
-        Serial.println("Dirección inválida. Use 'f' o 'r':");
-      }
+  int val = input.toInt();
+  if (dutyCycle == -1) {
+    if (val >= 0 && val <= 100) {
+      dutyCycle = val;
+      analogWrite(ENA, map(dutyCycle, 0, 100, 0, 255));
+      Serial.println("Duty recibido.");
+      Serial.println("¿Dirección? 'f' (adelante) o 'r' (reversa):");
+    } else {
+      Serial.println("Duty inválido. Intente de nuevo (0–100):");
+    }
+  } else if (!directionSet) {
+    if (input == "f") {
+      digitalWrite(IN1, HIGH);
+      digitalWrite(IN2, LOW);
+      directionSet = true;
+      Serial.println("Dirección: adelante.");
+      ready = true;
+    } else if (input == "r") {
+      digitalWrite(IN1, LOW);
+      digitalWrite(IN2, HIGH);
+      directionSet = true;
+      Serial.println("Dirección: reversa.");
+      ready = true;
+    } else {
+      Serial.println("Dirección inválida. Use 'f' o 'r':");
+    }
+  } else {
+    if (val >= 0 && val <= 100) {
+      dutyCycle = val;
+      analogWrite(ENA, map(dutyCycle, 0, 100, 0, 255));
+      Serial.print("Duty actualizado a: ");
+      Serial.println(dutyCycle);
+    } else {
+      Serial.println("Duty inválido. Intente de nuevo (0–100):");
     }
   }
-
+}
   if (ready) {
     unsigned long currentTime = millis();
     if (currentTime - lastRPMCheck >= 1000) {
