@@ -80,15 +80,11 @@ void loop() {
     }
   }
 
-  if (sistemaActivo) {
-    if (capturing) {
-      captureCurve();
-    } else {
-      static unsigned long lastSendTime = 0;
-      if (millis() - lastSendTime >= 500) {
-        sendManualData();
-        lastSendTime = millis();
-      }
+  if (sistemaActivo && !capturing) {
+    static unsigned long lastSendTime = 0;
+    if (millis() - lastSendTime >= 500) {
+      sendManualData();
+      lastSendTime = millis();
     }
   }
 }
@@ -140,10 +136,6 @@ void startCapture(int pwmIncrement) {
 
   Serial.println("Secuencia completada.");
   capturing = false;
-}
-
-void captureCurve() {
-  // Vacía por ahora (ya implementada dentro de startCapture)
 }
 
 void setPWM(int pwmValue) {
