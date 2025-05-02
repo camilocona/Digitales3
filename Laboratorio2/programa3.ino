@@ -7,7 +7,7 @@ volatile unsigned int pulseCount = 0;
 unsigned int lastPulseCount = 0;
 unsigned int pulsesPerRev = 20;
 
-const int maxSamples = 5000;  // Buffer suficientemente grande
+const int maxSamples = 5000;
 unsigned long timestamp[maxSamples];
 int pwmBuffer[maxSamples];
 float rpmBuffer[maxSamples];
@@ -15,7 +15,10 @@ int sampleIndex = 0;
 
 unsigned long lastSampleTime = 0;
 unsigned long startTime = 0;
-bool capturing = false;  // Indica si el sistema está capturando datos
+bool capturing = false;
+bool sistemaActivo = true;
+
+int currentPWM = 0;  // PWM aplicado manualmente
 
 void countPulse() {
   pulseCount++;
@@ -49,9 +52,8 @@ void loop() {
     String command = Serial.readStringUntil('\n');
     command.trim();
 
-    // Comando START <valor>
     if (command.startsWith("START")) {
-      String valueStr = command.substring(6);  // Obtener valor después de "START "
+      String valueStr = command.substring(6);
       int value = valueStr.toInt();
       if (value >= 0 && value <= 100) {
         startCapture(value);
@@ -60,9 +62,8 @@ void loop() {
       }
     }
 
-    // Comando PWM <valor>
     else if (command.startsWith("PWM")) {
-      String valueStr = command.substring(4);  // Obtener valor después de "PWM "
+      String valueStr = command.substring(4);
       int value = valueStr.toInt();
       if (value >= 0 && value <= 100) {
         setPWM(value);
@@ -70,29 +71,34 @@ void loop() {
         Serial.println("Valor fuera de rango. El valor de PWM debe estar entre 0 y 100.");
       }
     }
+
+    else if (command.equalsIgnoreCase("STOP")) {
+      sistemaActivo = false;
+      analogWrite(ENA, 0);
+      currentPWM = 0;
+      Serial.println("Sistema detenido.");
+    }
   }
 
-  if (capturing) {
-    // Continuar la captura de la curva experimental
-    captureCurve();
-  } else {
-    // Modo manual: enviar PWM y RPM cada 0.5 segundos (2 Hz)
-    static unsigned long lastSendTime = 0;
-    if (millis() - lastSendTime >= 500) {
-      sendManualData();
-      lastSendTime = millis();
+  if (sistemaActivo) {
+    if (capturing) {
+      captureCurve();
+    } else {
+      static unsigned long lastSendTime = 0;
+      if (millis() - lastSendTime >= 500) {
+        sendManualData();
+        lastSendTime = millis();
+      }
     }
   }
 }
 
 void startCapture(int pwmIncrement) {
-  // Iniciar captura de la curva experimental
   capturing = true;
   sampleIndex = 0;
   Serial.print("Iniciando captura con incremento de PWM: ");
   Serial.println(pwmIncrement);
 
-  // Generar los valores de PWM en pasos
   int stepPWM[] = {0, pwmIncrement, 2 * pwmIncrement, 3 * pwmIncrement, 4 * pwmIncrement, 5 * pwmIncrement, 4 * pwmIncrement, 3 * pwmIncrement, 2 * pwmIncrement, pwmIncrement, 0};
 
   for (int i = 0; i < sizeof(stepPWM) / sizeof(stepPWM[0]); i++) {
@@ -100,10 +106,9 @@ void startCapture(int pwmIncrement) {
     analogWrite(ENA, map(pwm, 0, 100, 0, 255));
 
     unsigned long stepStart = millis();
-    while (millis() - stepStart < 2000) { // 2 segundos por paso
+    while (millis() - stepStart < 2000) {
       unsigned long currentTime = millis();
-      if (currentTime - lastSampleTime >= 4) {  // 250 Hz = 4 ms
-        // Medir diferencia de pulsos
+      if (currentTime - lastSampleTime >= 4) {
         noInterrupts();
         unsigned int currentCount = pulseCount;
         interrupts();
@@ -111,10 +116,8 @@ void startCapture(int pwmIncrement) {
         unsigned int deltaPulses = currentCount - lastPulseCount;
         lastPulseCount = currentCount;
 
-        // Calcular RPM basado en delta de pulsos
-        float rpm = (deltaPulses / (float)pulsesPerRev) * (60000.0 / 4);  // RPM por minuto
+        float rpm = (deltaPulses / (float)pulsesPerRev) * (60000.0 / 4);
 
-        // Guardar en buffer
         if (sampleIndex < maxSamples) {
           timestamp[sampleIndex] = currentTime - startTime;
           pwmBuffer[sampleIndex] = pwm;
@@ -127,7 +130,6 @@ void startCapture(int pwmIncrement) {
     }
   }
 
-  // Terminado el ciclo, imprimir todo
   for (int i = 0; i < sampleIndex; i++) {
     Serial.print(timestamp[i]);
     Serial.print(",");
@@ -137,24 +139,23 @@ void startCapture(int pwmIncrement) {
   }
 
   Serial.println("Secuencia completada.");
-  capturing = false;  // Finaliza la captura
+  capturing = false;
 }
 
 void captureCurve() {
-  // Este es el ciclo donde capturamos los datos de la curva.
-  // La funcionalidad ya estaba definida dentro de startCapture(), así que esta función ahora es redundante.
-  // No es necesario tener esta función a menos que quieras mover más código de "startCapture" aquí.
+  // Vacía por ahora (ya implementada dentro de startCapture)
 }
 
 void setPWM(int pwmValue) {
-  // Ajustar el PWM manualmente
+  currentPWM = pwmValue;
   analogWrite(ENA, map(pwmValue, 0, 100, 0, 255));
   Serial.print("PWM ajustado a: ");
   Serial.println(pwmValue);
 }
 
 void sendManualData() {
-  // Enviar datos de PWM y RPM cada 0.5 segundos
+  if (currentPWM == 0) return;  // No imprimir si PWM es 0
+
   noInterrupts();
   unsigned int currentCount = pulseCount;
   interrupts();
@@ -162,12 +163,10 @@ void sendManualData() {
   unsigned int deltaPulses = currentCount - lastPulseCount;
   lastPulseCount = currentCount;
 
-  // Calcular RPM basado en delta de pulsos
-  float rpm = (deltaPulses / (float)pulsesPerRev) * (60000.0 / 500);  // RPM por minuto a 2Hz
+  float rpm = (deltaPulses / (float)pulsesPerRev) * (60000.0 / 500);
 
-  // Enviar datos por la interfaz serial
   Serial.print("PWM: ");
-  Serial.print(analogRead(ENA) * 100 / 255);  // Convertir el valor de 0-255 a porcentaje
+  Serial.print(currentPWM);
   Serial.print(", RPM: ");
   Serial.println(rpm);
 }
