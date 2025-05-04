@@ -1,5 +1,5 @@
 /**
- * @file motor_encoder_control.ino
+ * @file programa1_dox.ino
  * @brief Control de motor DC con lectura de velocidad mediante encoder rotatorio.
  * 
  * Este programa permite controlar la velocidad y dirección de un motor DC usando un puente H
