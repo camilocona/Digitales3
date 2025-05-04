@@ -1,13 +1,12 @@
-"""
-@file programa3mp_dox.py
-@brief Control de motor con PWM y medición de velocidad usando encoder.
+##
+# @file programa3mp_dox.py
+# @brief Control de motor con PWM y medición de velocidad usando encoder.
 
-Este código utiliza un PWM para controlar la velocidad de un motor DC y un encoder para medir su velocidad de rotación en RPM.
-Se incluyen funciones para capturar datos a diferentes niveles de PWM, controlar manualmente el PWM y visualizar datos de velocidad.
+# Este código utiliza un PWM para controlar la velocidad de un motor DC y un encoder para medir su velocidad de rotación en RPM.
+# Se incluyen funciones para capturar datos a diferentes niveles de PWM, controlar manualmente el PWM y visualizar datos de velocidad.
 
-@author Maria Valentina Quiroga Alzate, Camilo Andrés Anacona Anacona
-@date 2025-05-04
-"""
+# @author Maria Valentina Quiroga Alzate, Camilo Andrés Anacona Anacona
+# @date 2025-05-04
 
 from machine import Pin, PWM
 import time
