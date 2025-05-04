@@ -1,6 +1,7 @@
 from machine import Pin, PWM
-from time import ticks_ms, ticks_diff, sleep_ms
+import time
 import sys
+import math
 import select
 
 # Pines
@@ -9,133 +10,118 @@ IN1 = Pin(1, Pin.OUT)
 IN2 = Pin(2, Pin.OUT)
 ENCODER_PIN = Pin(10, Pin.IN, Pin.PULL_UP)
 
-# Parámetros
-pulse_count = 0
-last_pulse_count = 0
-pulses_per_rev = 20
-
-max_samples = 5000
-timestamp = []
-pwm_buffer = []
-rpm_buffer = []
-sample_index = 0
-
-last_sample_time = 0
-start_time = 0
-capturing = False
-sistema_activo = True
-
-current_pwm = 0  # PWM aplicado manualmente
-
-# Configurar PWM
+# Configuración PWM
 ENA.freq(1000)
-
-# Interrupción del encoder
-def count_pulse(pin):
-    global pulse_count
-    pulse_count += 1
-
-ENCODER_PIN.irq(trigger=Pin.IRQ_RISING, handler=count_pulse)
-
-# Dirección fija
+ENA.duty_u16(0)
 IN1.value(1)
 IN2.value(0)
 
-print("timestamp_ms,pwm_percent,rpm")
+# Variables
+pulsos = 0
+ultimo_pulsos = 0
+pulsos_por_rev = 20
+sistema_activo = True
+capturando = False
+pwm_actual = 0
+ultimo_envio = time.ticks_ms()
 
-start_time = ticks_ms()
-last_send_time = 0
+# Interrupción
+def contar_pulsos(pin):
+    global pulsos
+    pulsos += 1
 
-def set_pwm(value):
-    global current_pwm
-    current_pwm = value
-    ENA.duty_u16(int(value * 65535 / 100))
-    print("PWM ajustado a:", value)
+ENCODER_PIN.irq(trigger=Pin.IRQ_RISING, handler=contar_pulsos)
 
-def send_manual_data():
-    global pulse_count, last_pulse_count
-    if current_pwm == 0:
+# Función para establecer PWM
+def set_pwm(porcentaje):
+    global pwm_actual
+    pwm_actual = porcentaje
+    duty = int(porcentaje * 65535 / 100)
+    ENA.duty_u16(duty)
+    print("PWM ajustado a: {} %".format(porcentaje))
+
+# Función para calcular RPM
+def calcular_rpm(delta_pulsos, periodo_ms):
+    return (delta_pulsos / pulsos_por_rev) * (60000 / periodo_ms)
+
+# Función para velocidad (ejemplo fijo)
+def calcular_velocidad(rpm):
+    radio_rueda_m = 0.03  # 3 cm
+    velocidad_mps = (2 * math.pi * radio_rueda_m) * (rpm / 60)
+    return velocidad_mps * 3.6
+
+# Función de captura automática
+def start_capture(incremento_pwm):
+    global capturando, pulsos, ultimo_pulsos, ultimo_envio
+
+    if incremento_pwm <= 0 or incremento_pwm > 100:
+        print("Valor fuera de rango. Usa entre 1 y 100.")
         return
 
-    current_count = pulse_count
-    delta = current_count - last_pulse_count
-    last_pulse_count = current_count
+    capturando = True
+    print("Iniciando captura con incremento de PWM: {}".format(incremento_pwm))
 
-    rpm = (delta / pulses_per_rev) * (60000 / 500)
+    secuencia_pwm = [i for i in range(0, 101, incremento_pwm)] + \
+                    [i for i in range(100 - incremento_pwm, -1, -incremento_pwm)]
 
-    print("PWM:", current_pwm, ", RPM:", round(rpm, 2))
+    for pwm in secuencia_pwm:
+        set_pwm(pwm)
+        tiempo_inicio = time.ticks_ms()
+        while time.ticks_diff(time.ticks_ms(), tiempo_inicio) < 2000:
+            if time.ticks_diff(time.ticks_ms(), ultimo_envio) >= 500:
+                delta = pulsos - ultimo_pulsos
+                ultimo_pulsos = pulsos
+                rpm = calcular_rpm(delta, 500)
+                velocidad = calcular_velocidad(rpm)
+                global ultimo_envio
+                if not (pwm == 0 and rpm == 0 and velocidad == 0):
+                    print("PWM: {} %, RPM: {:.2f} | Velocidad: {:.2f} km/h".format(pwm, rpm, velocidad))
+                ultimo_envio = time.ticks_ms()
 
-def start_capture(incremento_pwm):
-    global capturing, sample_index, last_sample_time, last_pulse_count, pulse_count
-    capturing = True
-    sample_index = 0
-    print("Iniciando captura con incremento de PWM:", incremento_pwm)
-
-    step_pwm = [0, incremento_pwm, 2*incremento_pwm, 3*incremento_pwm, 4*incremento_pwm, 5*incremento_pwm,
-                4*incremento_pwm, 3*incremento_pwm, 2*incremento_pwm, incremento_pwm, 0]
-
-    for pwm in step_pwm:
-        ENA.duty_u16(int(pwm * 65535 / 100))
-        step_start = ticks_ms()
-        while ticks_diff(ticks_ms(), step_start) < 2000:
-            now = ticks_ms()
-            if ticks_diff(now, last_sample_time) >= 4:
-                current_count = pulse_count
-                delta = current_count - last_pulse_count
-                last_pulse_count = current_count
-
-                rpm = (delta / pulses_per_rev) * (60000 / 4)
-
-                if sample_index < max_samples:
-                    timestamp.append(ticks_diff(now, start_time))
-                    pwm_buffer.append(pwm)
-                    rpm_buffer.append(rpm)
-                    sample_index += 1
-
-                last_sample_time = now
-
-    for i in range(sample_index):
-        print(f"{timestamp[i]},{pwm_buffer[i]},{rpm_buffer[i]:.2f}")
-
+    set_pwm(0)
+    capturando = False
     print("Secuencia completada.")
-    capturing = False
 
-# Loop principal
+# Bucle principal
+print("Listo para recibir comandos: START <valor>, PWM <valor>, STOP")
+
 while True:
-    # Leer comandos
     if sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
-        cmd = sys.stdin.readline().strip()
+        comando = sys.stdin.readline().strip().upper()
 
-        if cmd.startswith("START"):
-            try:
-                val = int(cmd[6:])
-                if 0 <= val <= 100:
-                    start_capture(val)
+        if comando.startswith("START"):
+            partes = comando.split()
+            if len(partes) == 2 and partes[1].isdigit():
+                valor = int(partes[1])
+                start_capture(valor)
+            else:
+                print("Comando START inválido. Usa: START <valor entre 1 y 100>")
+
+        elif comando.startswith("PWM"):
+            partes = comando.split()
+            if len(partes) == 2 and partes[1].isdigit():
+                valor = int(partes[1])
+                if 0 <= valor <= 100:
+                    set_pwm(valor)
                 else:
-                    print("Valor fuera de rango. PWM debe estar entre 0 y 100.")
-            except:
-                print("Comando START inválido.")
+                    print("Valor fuera de rango (0–100)")
+            else:
+                print("Comando PWM inválido. Usa: PWM <valor entre 0 y 100>")
 
-        elif cmd.startswith("PWM"):
-            try:
-                val = int(cmd[4:])
-                if 0 <= val <= 100:
-                    set_pwm(val)
-                else:
-                    print("Valor fuera de rango. PWM debe estar entre 0 y 100.")
-            except:
-                print("Comando PWM inválido.")
-
-        elif cmd.upper() == "STOP":
+        elif comando == "STOP":
+            set_pwm(0)
             sistema_activo = False
-            ENA.duty_u16(0)
-            current_pwm = 0
             print("Sistema detenido.")
 
-    # Envío automático si está activo y no capturando
-    if sistema_activo and not capturing:
-        if ticks_diff(ticks_ms(), last_send_time) >= 500:
-            send_manual_data()
-            last_send_time = ticks_ms()
+        else:
+            print("Comando desconocido.")
 
-    sleep_ms(10)
+    if sistema_activo and not capturando:
+        if time.ticks_diff(time.ticks_ms(), ultimo_envio) >= 500:
+            delta = pulsos - ultimo_pulsos
+            ultimo_pulsos = pulsos
+            rpm = calcular_rpm(delta, 500)
+            velocidad = calcular_velocidad(rpm)
+            if not (pwm_actual == 0 and rpm == 0 and velocidad == 0):
+                print("PWM: {} %, RPM: {:.2f} | Velocidad: {:.2f} km/h".format(pwm_actual, rpm, velocidad))
+            ultimo_envio = time.ticks_ms()
