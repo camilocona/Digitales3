@@ -1,5 +1,5 @@
 ##
-# @file motor_encoder_control.py
+# @file programa1mp_dox.py
 # @brief Control de un motor DC con lectura de velocidad usando encoder rotatorio en Raspberry Pi Pico con MicroPython.
 #
 # Este script permite al usuario controlar el motor mediante PWM, seleccionar dirección (adelante o reversa),
