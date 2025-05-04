@@ -6,7 +6,7 @@
 # y calcular la velocidad de giro (RPM) y velocidad lineal (km/h) usando un encoder conectado.
 # La configuración y control se hace a través de la entrada estándar (monitor serial).
 #
-# @author TuNombre
+# @Maria Valentina Quiroga Alzate, Camilo Andrés Anacona Anacona
 # @date 2025-05-04
 
 from machine import Pin, PWM
