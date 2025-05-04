@@ -1,11 +1,11 @@
 /**
- * @file motor_control.cpp
+ * @file programa3_dox.ino
  * @brief Control de motor con PWM y medición de velocidad usando encoder.
  * 
  * Este código utiliza un PWM para controlar la velocidad de un motor DC y un encoder para medir su velocidad de rotación en RPM.
  * Se incluyen funciones para capturar datos a diferentes niveles de PWM, controlar manualmente el PWM y visualizar datos de velocidad.
  * 
- * @author TuNombre
+ * @author Maria Valentina Quiroga Alzate, Camilo Andrés Anacona Anacona
  * @date 2025-05-04
  */
 
