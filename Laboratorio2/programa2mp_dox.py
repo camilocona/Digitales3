@@ -1,5 +1,5 @@
 ##
-# @file motor_step_response.py
+# @file programa2mp_dox.py
 # @brief Prueba de respuesta escalonada para motor DC usando PWM y encoder, en MicroPython.
 #
 # Este script aplica una serie de pasos de PWM a un motor DC controlado por un puente H y mide su velocidad
