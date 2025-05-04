@@ -6,7 +6,7 @@
  * y calcula la velocidad angular (RPM) y lineal (km/h) mediante un encoder conectado a una Raspberry Pi Pico.
  * Se configura vía monitor serie.
  * 
- * @Maria Valentina Quiroga Alzate, Camilo Andrés Anacona Anacona
+ * @author Maria Valentina Quiroga Alzate, Camilo Andrés Anacona Anacona
  * @date 2025-05-04
  */
 
