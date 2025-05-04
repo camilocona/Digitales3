@@ -7,7 +7,7 @@
 #
 # Diseñado para placas compatibles con MicroPython como Raspberry Pi Pico.
 #
-# @author TuNombre
+# @author Maria Valentina Quiroga Alzate, Camilo Andrés Anacona Anacona
 # @date 2025-05-04
 
 from machine import Pin, PWM
