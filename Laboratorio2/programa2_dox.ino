@@ -8,7 +8,7 @@
  *
  * Aplicación útil para caracterizar dinámicamente motores (respuesta a entrada escalón).
  *
- * @Maria Valentina Quiroga Alzate, Camilo Andrés Anacona Anacona
+ * @author Maria Valentina Quiroga Alzate, Camilo Andrés Anacona Anacona
  * @date 2025-05-04
  */
 
