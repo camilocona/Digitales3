@@ -1,5 +1,5 @@
 /**
- * @file motor_step_response.ino
+ * @file programa2_dox.ino
  * @brief Control y adquisición de datos para un motor DC con encoder, usando una secuencia escalonada de PWM.
  *
  * Este programa genera una serie de señales PWM en forma de escalón para un motor DC, mide su velocidad (RPM)
@@ -8,7 +8,7 @@
  *
  * Aplicación útil para caracterizar dinámicamente motores (respuesta a entrada escalón).
  *
- * @author TuNombre
+ * @Maria Valentina Quiroga Alzate, Camilo Andrés Anacona Anacona
  * @date 2025-05-04
  */
 
