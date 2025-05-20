@@ -7,10 +7,6 @@
  * 
  * @copyright Unlicensed
  * 
- * @defgroup FMU Flash Memory Module (FMU)
- * @brief Registers, types, and macros for the MCX 153 FMU hardware module.
- * @{
- * 
  * This header file declares the data types, constants, macros, and the module structure
  * for controlling the memory-mapped registers of the Flash Memory Module (FMU).
  * The defined data structures and macros follow a standard naming notation
@@ -41,7 +37,10 @@
  * 3. Register access macros
  *    a. Whole register access macros: #define rFMU_<REGISTER> for 32-bit access
  *    b. Bitfield access macros: #define bFMU_<BITFIELD> for individual bits or fields
- *
+ *    c. Atomic write macros:
+ *       - #define xorFMU_<REGISTER>_<NUMBER> for atomic XOR writes
+ *       - #define setFMU_<REGISTER>_<NUMBER> for atomic SET writes
+ *       - #define clrFMU_<REGISTER>_<NUMBER> for atomic CLR writes
  */
 
 #ifndef FMU_MCX153_LIB_H
@@ -49,47 +48,34 @@
 
 #include <stdint.h> /**< Include fixed-width integer types (e.g., uint32_t) */
 
-/********************************************************************
- * 1. Declaration of FMU registers as unions with bit fields
- ********************************************************************/
- 
-/** 
- * @name FMU Registers Bitfield Types
- * @{
- */
-
 /**
- * @typedef __FMU_FSTAT_t
  * @brief Flash Status Register (Flash module status register).
+ *
+ * Represents the status flags and control bits of the Flash Memory Module.
  */
 typedef union {
     uint32_t WORD; /**< Full 32-bit register access */
     struct {
         uint32_t FAIL:1;       /**< Bit 0: Command Fail Flag (1 indicates command failure) */
-        uint32_t RESERVED0:1;  /**< Bit 1: Reserved */
+        uint32_t RESERVED0:1;  /**< Bit 1: Reserved, do not use */
         uint32_t CMDABT:1;     /**< Bit 2: Command Abort Flag (indicates command was aborted) */
-        uint32_t RESERVED1:1;  /**< Bit 3: Reserved */
+        uint32_t RESERVED1:1;  /**< Bit 3: Reserved, do not use */
         uint32_t PVIOL:1;      /**< Bit 4: Protection Violation Flag */
         uint32_t ACCERR:1;     /**< Bit 5: Access Error Flag (invalid access or parameters) */
         uint32_t CWSABT:1;     /**< Bit 6: Command Write Sequence Abort Flag */
         uint32_t CCIF:1;       /**< Bit 7: Command Complete Interrupt Flag */
         uint32_t CMDPRT:2;     /**< Bits 8-9: Command Protection Level */
         uint32_t CMDP:1;       /**< Bit 10: Command Protection Status Flag */
-        uint32_t RESERVED2:1;  /**< Bit 11: Reserved */
+        uint32_t RESERVED2:1;  /**< Bit 11: Reserved, do not use */
         uint32_t CMDDID:4;     /**< Bits 12-15: Command Domain ID */
         uint32_t DFDIF:1;      /**< Bit 16: Double Bit Fault Detect Interrupt Flag (ECC error) */
         uint32_t SALV_USED:1;  /**< Bit 17: Salvage Used Flag (ECC salvage on erase) */
-        uint32_t RESERVED3:13; /**< Bits 18-30: Reserved */
+        uint32_t RESERVED3:13; /**< Bits 18-30: Reserved, do not use */
         uint32_t PERDY:1;      /**< Bit 31: Program-Erase Ready Flag */
     } BITS; /**< Bit-field access structure */
 } __FMU_FSTAT_t;
 
-/** @} */
-
-/** 
- * @name FMU Register Masks
- * @{
- */
+/* Register bit masks */
 #define mFMU_FSTAT_FAIL        0x00000001UL /**< Mask for FAIL bit (bit 0) in FSTAT register */
 #define mFMU_FSTAT_CMDABT      0x00000004UL /**< Mask for CMDABT bit (bit 2) in FSTAT register */
 #define mFMU_FSTAT_PVIOL       0x00000010UL /**< Mask for PVIOL bit (bit 4) in FSTAT register */
@@ -102,21 +88,17 @@ typedef union {
 #define mFMU_FSTAT_DFDIF       0x00010000UL /**< Mask for DFDIF bit (bit 16) in FSTAT register */
 #define mFMU_FSTAT_SALV_USED   0x00020000UL /**< Mask for SALV_USED bit (bit 17) in FSTAT register */
 #define mFMU_FSTAT_PERDY       0x80000000UL /**< Mask for PERDY bit (bit 31) in FSTAT register */
-/** @} */
 
-/** 
- * @name FMU CMDPRT Protection Levels Constants
- * @{
- */
+/* CMDPRT Protection Levels Constants */
 #define kFMU_FSTAT_CMDPRT_SecureNormal         0x0 /**< Secure Normal Protection */
 #define kFMU_FSTAT_CMDPRT_SecurePrivileged     0x1 /**< Secure Privileged Protection */
 #define kFMU_FSTAT_CMDPRT_NonsecureNormal      0x2 /**< Nonsecure Normal Protection */
 #define kFMU_FSTAT_CMDPRT_NonsecurePrivileged  0x3 /**< Nonsecure Privileged Protection */
-/** @} */
 
 /**
- * @typedef __FMU_FCNFG_t
  * @brief Flash Configuration Register (Flash module configuration register).
+ *
+ * Controls configuration flags for the Flash Memory Module.
  */
 typedef union {
     uint32_t WORD; /**< Full 32-bit access */
@@ -132,19 +114,17 @@ typedef union {
     } BITS; /**< Bit-field access structure */
 } __FMU_FCNFG_t;
 
-/** @name FCNFG Register Masks
- * @{
- */
+/* FCNFG Register Masks */
 #define mFMU_FCNFG_CCIE      0x00000080UL /**< Mask for CCIE bit (bit 7) in FCNFG register */
 #define mFMU_FCNFG_ERSREQ    0x00000100UL /**< Mask for ERSREQ bit (bit 8) in FCNFG register */
 #define mFMU_FCNFG_DFDIE     0x00010000UL /**< Mask for DFDIE bit (bit 16) in FCNFG register */
 #define mFMU_FCNFG_ERSIEN0   0x0F000000UL /**< Mask for ERSIEN0 bits (bits 24-27) in FCNFG register */
 #define mFMU_FCNFG_ERSIEN1   0xF0000000UL /**< Mask for ERSIEN1 bits (bits 28-31) in FCNFG register */
-/** @} */
 
 /**
- * @typedef __FMU_FCTRL_t
  * @brief Flash Control Register (Flash module control register).
+ *
+ * Provides control signals and flags for Flash operation.
  */
 typedef union {
     uint32_t WORD; /**< Full 32-bit access */
@@ -160,18 +140,16 @@ typedef union {
     } BITS; /**< Bit-field access structure */
 } __FMU_FCTRL_t;
 
-/** @name FCTRL Register Masks
- * @{
- */
+/* FCTRL Register Masks */
 #define mFMU_FCTRL_RWSC       0x0000000FUL /**< Mask for RWSC bits (bits 0-3) in FCTRL register */
 #define mFMU_FCTRL_LSACTIVE   0x00000100UL /**< Mask for LSACTIVE bit (bit 8) in FCTRL register */
 #define mFMU_FCTRL_FDFD       0x00010000UL /**< Mask for FDFD bit (bit 16) in FCTRL register */
 #define mFMU_FCTRL_ABTREQ     0x01000000UL /**< Mask for ABTREQ bit (bit 24) in FCTRL register */
-/** @} */
 
 /**
- * @typedef __FMU_FCCOB_t
  * @brief Flash Common Command Object Registers (FCCOB0 - FCCOB7).
+ *
+ * Used for command parameters and communication with the Flash module.
  */
 typedef union {
     uint32_t WORD; /**< Full 32-bit access to each FCCOB register */
@@ -180,9 +158,9 @@ typedef union {
     } BITS; /**< Bit-field access structure */
 } __FMU_FCCOB_t;
 
-/********************************************************************
- * @brief FMU module structure mapping all registers
- ********************************************************************/
+/**
+ * @brief FMU module structure mapping all registers.
+ */
 typedef struct {
     volatile __FMU_FSTAT_t FSTAT;   /**< Offset 0x00: Flash Status Register */
     volatile __FMU_FCNFG_t FCNFG;   /**< Offset 0x04: Flash Configuration Register */
@@ -197,10 +175,7 @@ typedef struct {
     volatile __FMU_FCCOB_t FCCOB7;  /**< Offset 0x28: Flash Common Command Object Register 7 */
 } __FMU__t;
 
-/********************************************************************
- * 3. Short access macros for registers and bits
- ********************************************************************/
-/** 
+/**
  * @brief FMU base address as defined in datasheet.
  */
 #define kFMU_BASE_ADDR 0x40095000UL
@@ -210,9 +185,7 @@ typedef struct {
  */
 #define sFMU (*((__FMU__t *) kFMU_BASE_ADDR))
 
-/** @name Macros for direct access to full 32-bit registers
- * @{
- */
+/* Macros for direct access to full 32-bit registers */
 #define rFMU_FSTAT       sFMU.FSTAT.WORD  /**< Macro for FSTAT register (Flash Status) */
 #define rFMU_FCNFG       sFMU.FCNFG.WORD  /**< Macro for FCNFG register (Flash Configuration) */
 #define rFMU_FCTRL       sFMU.FCTRL.WORD  /**< Macro for FCTRL register (Flash Control) */
@@ -224,11 +197,8 @@ typedef struct {
 #define rFMU_FCCOB5      sFMU.FCCOB5.WORD /**< Macro for FCCOB5 register */
 #define rFMU_FCCOB6      sFMU.FCCOB6.WORD /**< Macro for FCCOB6 register */
 #define rFMU_FCCOB7      sFMU.FCCOB7.WORD /**< Macro for FCCOB7 register */
-/** @} */
 
-/** @name Macros for access to individual bits or bit-fields
- * @{
- */
+/* Macros for access to individual bits or bit-fields */
 #define bFMU_FAIL        sFMU.FSTAT.BITS.FAIL           /**< Command Fail Flag */
 #define bFMU_CMDABT      sFMU.FSTAT.BITS.CMDABT         /**< Command Abort Flag */
 #define bFMU_PVIOL       sFMU.FSTAT.BITS.PVIOL          /**< Protection Violation Flag */
@@ -250,8 +220,6 @@ typedef struct {
 #define bFMU_LSACTIVE    sFMU.FCTRL.BITS.LSACTIVE       /**< Low Speed Active Mode Enable */
 #define bFMU_FDFD        sFMU.FCTRL.BITS.FDFD           /**< Force Double Bit Fault Detect */
 #define bFMU_ABTREQ      sFMU.FCTRL.BITS.ABTREQ         /**< Abort Request */
-/** @} */
-
-/** @} */  // end of FMU group
 
 #endif /* FMU_MCX153_LIB_H */
+
