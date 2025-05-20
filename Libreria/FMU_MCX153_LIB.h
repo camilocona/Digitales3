@@ -20,9 +20,6 @@
  *
  * MODULE STRUCTURE                 ==>   s + MODULEname + [MODULEnumber]
  * MMIO REGISTER                  ==>   r + MODULEname + [MODULEnumber] + _ + REGISTERname + [REGISTERnumber]
- * MMIO REGISTER ATOMIC WRITE XOR ==>   xor + MODULEname + [MODULEnumber] + _ + REGISTERname + [REGISTERnumber]  
- * MMIO REGISTER ATOMIC WRITE SET ==>   set + MODULEname + [MODULEnumber] + _ + REGISTERname + [REGISTERnumber]  
- * MMIO REGISTER ATOMIC WRITE CLR ==>   clr + MODULEname + [MODULEnumber] + _ + REGISTERname + [REGISTERnumber]  
  * REGISTER BITFIELD or BIT       ==>   b + MODULEname + [MODULEnumber] + _ + BITFIELDname
  * BITFIELD CONSTANT VALUEs       ==>   k + MODULEname + _ + BITFIELDname + _ + CONSTANTname
  * MODULE MASKs                  ==>   m + MODULEname + _ + MASKname
