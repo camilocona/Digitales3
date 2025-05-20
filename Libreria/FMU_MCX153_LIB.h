@@ -37,10 +37,6 @@
  * 3. Register access macros
  *    a. Whole register access macros: #define rFMU_<REGISTER> for 32-bit access
  *    b. Bitfield access macros: #define bFMU_<BITFIELD> for individual bits or fields
- *    c. Atomic write macros:
- *       - #define xorFMU_<REGISTER>_<NUMBER> for atomic XOR writes
- *       - #define setFMU_<REGISTER>_<NUMBER> for atomic SET writes
- *       - #define clrFMU_<REGISTER>_<NUMBER> for atomic CLR writes
  */
 
 #ifndef FMU_MCX153_LIB_H
@@ -57,20 +53,20 @@ typedef union {
     uint32_t WORD; /**< Full 32-bit register access */
     struct {
         uint32_t FAIL:1;       /**< Bit 0: Command Fail Flag (1 indicates command failure) */
-        uint32_t RESERVED0:1;  /**< Bit 1: Reserved, do not use */
+        uint32_t RESERVED0:1;  /**< Bit 1: Reserved */
         uint32_t CMDABT:1;     /**< Bit 2: Command Abort Flag (indicates command was aborted) */
-        uint32_t RESERVED1:1;  /**< Bit 3: Reserved, do not use */
+        uint32_t RESERVED1:1;  /**< Bit 3: Reserved */
         uint32_t PVIOL:1;      /**< Bit 4: Protection Violation Flag */
         uint32_t ACCERR:1;     /**< Bit 5: Access Error Flag (invalid access or parameters) */
         uint32_t CWSABT:1;     /**< Bit 6: Command Write Sequence Abort Flag */
         uint32_t CCIF:1;       /**< Bit 7: Command Complete Interrupt Flag */
         uint32_t CMDPRT:2;     /**< Bits 8-9: Command Protection Level */
         uint32_t CMDP:1;       /**< Bit 10: Command Protection Status Flag */
-        uint32_t RESERVED2:1;  /**< Bit 11: Reserved, do not use */
+        uint32_t RESERVED2:1;  /**< Bit 11: Reserved */
         uint32_t CMDDID:4;     /**< Bits 12-15: Command Domain ID */
         uint32_t DFDIF:1;      /**< Bit 16: Double Bit Fault Detect Interrupt Flag (ECC error) */
         uint32_t SALV_USED:1;  /**< Bit 17: Salvage Used Flag (ECC salvage on erase) */
-        uint32_t RESERVED3:13; /**< Bits 18-30: Reserved, do not use */
+        uint32_t RESERVED3:13; /**< Bits 18-30: Reserved */
         uint32_t PERDY:1;      /**< Bit 31: Program-Erase Ready Flag */
     } BITS; /**< Bit-field access structure */
 } __FMU_FSTAT_t;
