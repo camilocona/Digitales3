@@ -7,7 +7,7 @@
 
 #define IN1 1
 #define IN2 2
-#define ENA 4       // PWM pin
+#define ENA 0       // PWM pin
 #define SENSOR_PIN 10
 #define PULSOS_POR_REV 20
 
