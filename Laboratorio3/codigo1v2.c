@@ -81,9 +81,10 @@ int main() {
     char buf[10];
     int idx = 0;
 
-    printf("Selecciona modo de medicion: 0=polling, 1=interrupcion, 2=combinado\n");
     while (!stdio_usb_connected()) sleep_ms(100);
-
+    printf("Selecciona modo de medicion: 0=polling, 1=interrupcion, 2=combinado\n");
+    fflush(stdout);
+    
     while (true) {
         int c = getchar_timeout_us(1000);
         if (c != PICO_ERROR_TIMEOUT) {
