@@ -49,6 +49,8 @@ void writeEeprom(uint16_t current_address, struct Coordenadas coordenadas) {
     memcpy(&write_buffer[1], &coordenadas, COORDENADAS_SIZE);
 
     i2c_write_blocking(i2c_default, device_addr, write_buffer, sizeof(write_buffer), false);
+    printf("EEPROM Write: %.2f dB @ %.6f, %.6f\n", coordenadas.dB, coordenadas.dato1, coordenadas.dato2);
+
 }
 
 void readEepromOnlyPoint(uint16_t address) {
@@ -90,6 +92,8 @@ void readEepromOnlyPlacemark(uint16_t address) {
         !isnan(coordenadas.dato1) && !isnan(coordenadas.dato2) &&
         coordenadas.dato1 >= 6.0 && coordenadas.dato1 <= 7.0 &&
         coordenadas.dato2 <= -75.0 && coordenadas.dato2 >= -76.0) {
+        //printf("LEÍDO: %.2f dB en lat=%.6f lon=%.6f\n", coordenadas.dB, coordenadas.dato1, coordenadas.dato2);
+
         KMLPlacemark(coordenadas.dato2, coordenadas.dato1, coordenadas.dB);
     }
 }

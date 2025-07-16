@@ -123,8 +123,16 @@ int main() {
         } else benableW=false;
 
         if(benableW && alarm_fired_1 && GPS.Status == 1) {
-            // Ya no guardar datos sin nivel de ruido
-            sleep_ms(1000);
+            if (!isnan(GPS.Lat) && !isnan(GPS.Lon) &&
+                GPS.Lat >= -90.0 && GPS.Lat <= 90.0 &&
+                GPS.Lon >= -180.0 && GPS.Lon <= 180.0) {
+
+                struct Coordenadas datos = {GPS.Lat, GPS.Lon, 0.0f};  // solo coordenada
+                writeEeprom(currentAddress, datos);
+                printf("→ Posición guardada: %.6f, %.6f @ Addr=%d\n", GPS.Lat, GPS.Lon, currentAddress);
+                currentAddress += sizeof(struct Coordenadas);
+                if (currentAddress >= 2048) currentAddress = 0;
+            }
 
             if(n!=0){
                 printf("Leyendo desde la EEPROM...\n");
@@ -149,6 +157,8 @@ int main() {
 
                     struct Coordenadas datos = {GPS.Lat, GPS.Lon, ruido};
                     writeEeprom(currentAddress, datos);
+                    printf("EEPROM Write: %.2f dB @ %.6f, %.6f\n", datos.dB, datos.dato1, datos.dato2);
+                    printf("→ Escrito en EEPROM: %.2f dB @ lat=%.6f, lon=%.6f | Addr=%d\n", ruido, GPS.Lat, GPS.Lon, currentAddress);
                     currentAddress += sizeof(struct Coordenadas);
                     if (currentAddress >= 2048) currentAddress = 0;
                 } else {
