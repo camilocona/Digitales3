@@ -8,8 +8,8 @@
  * - Convertir los datos almacenados en formatos geoespaciales KML para visualización.
  * 
  * @authors
- * - Nombre del Autor 1
- * - Nombre del Autor 2
+ * - Camilo Andres Anacona Anacona
+ * - Maria Valentina Quiroga Alzate
  */
 
 #include <stdio.h>              ///< Entrada/salida estándar
