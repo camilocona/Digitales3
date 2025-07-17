@@ -1,19 +1,53 @@
+/**
+ * @file formatKML.h
+ * @brief Declaraciones y definiciones para la generación de archivos KML.
+ * 
+ * Este módulo permite crear trazas geoespaciales visualizables en herramientas como Google Earth.
+ * Se generan estructuras XML para representar rutas (LineString) y puntos individuales con niveles de ruido (Placemark).
+ * 
+ * @authors
+ * - Camilo Andres Anacona Anacona
+ * - Maria Valentina Quiroga Alzate
+ */
+
 #ifndef FORMATKML_H
 #define FORMATKML_H
 
-#include <stdio.h>
+#include <stdio.h> ///< Funciones estándar de entrada/salida
 
 /**
- * @brief Declaraciones de funciones públicas para generar archivos KML.
+ * @brief Imprime la cabecera del archivo KML en la consola.
+ * Contiene metadatos XML, estilos y encabezado del documento.
  */
 void KMLHeader(void);
+
+/**
+ * @brief Imprime el pie de cierre del archivo KML en la consola.
+ * Cierra correctamente las etiquetas abiertas del documento.
+ */
 void KMLFooter(void);
+
+/**
+ * @brief Imprime un punto dentro de una línea de coordenadas (LineString).
+ * 
+ * @param lon Longitud (X).
+ * @param lat Latitud (Y).
+ */
 void KMLLinePoint(double lon, double lat);
+
+/**
+ * @brief Imprime un punto individual con información de ruido en decibeles como placemark.
+ * 
+ * @param lon Longitud (X).
+ * @param lat Latitud (Y).
+ * @param ruido Nivel de ruido en dB a mostrar como nombre.
+ */
 void KMLPlacemark(double lon, double lat, float ruido);
 
 /**
- * @brief Cabecera del archivo KML.
- * Contiene información XML básica y estilos para el trazado de rutas.
+ * @brief Cadena XML que representa la cabecera del archivo KML.
+ * 
+ * Incluye metadatos, estilos y la estructura inicial del documento, lista para insertar coordenadas.
  */
 const char* cabecera = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                        "<kml xmlns=\"http://www.opengis.net/kml/2.2\">\n"
@@ -40,8 +74,9 @@ const char* cabecera = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                        "    <coordinates>\n";
 
 /**
- * @brief Pie del archivo KML.
- * Cierra la sección de coordenadas y el documento KML.
+ * @brief Cadena XML que representa el pie del archivo KML.
+ * 
+ * Cierra correctamente las etiquetas abiertas (`coordinates`, `LineString`, `Placemark`, `Document`, `kml`).
  */
 const char* footer = "    </coordinates>\n"
                      "   </LineString>\n"
@@ -50,22 +85,22 @@ const char* footer = "    </coordinates>\n"
                      "</kml>\n";
 
 /**
- * @brief Imprime la cabecera del archivo KML en la consola.
+ * @brief Implementación de la función KMLHeader.
  */
 void KMLHeader() {
     printf("%s", cabecera);
 }
 
 /**
- * @brief Imprime el pie del archivo KML en la consola.
+ * @brief Implementación de la función KMLFooter.
  */
 void KMLFooter() {
     printf("%s", footer);
 }
 
 /**
- * @brief Imprime un punto en la línea de ruta (coordenadas simples).
- *
+ * @brief Imprime una coordenada como parte de una línea de ruta (sin etiqueta).
+ * 
  * @param lon Longitud.
  * @param lat Latitud.
  */
@@ -74,11 +109,11 @@ void KMLLinePoint(double lon, double lat) {
 }
 
 /**
- * @brief Imprime un punto individual con etiqueta de dB (Placemark independiente).
- *
+ * @brief Imprime un marcador individual en el mapa con un valor de ruido asociado.
+ * 
  * @param lon Longitud.
  * @param lat Latitud.
- * @param ruido Nivel de ruido en decibelios (dB).
+ * @param ruido Valor numérico en decibelios.
  */
 void KMLPlacemark(double lon, double lat, float ruido) {
     printf("  <Placemark>\n");
@@ -88,4 +123,5 @@ void KMLPlacemark(double lon, double lat, float ruido) {
     printf("    </Point>\n");
     printf("  </Placemark>\n");
 }
+
 #endif  // FORMATKML_H
